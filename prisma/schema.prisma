@@ -1,0 +1,113 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id          Int         @id @default(autoincrement())
+  active      Boolean     @default(true)
+  user        String
+  password    String
+  name        String
+  role        Role        @default(ADMIN)
+  token       String?
+  createdAt   DateTime    @default(now())
+  updateAt    DateTime?   @updatedAt
+  cicles      StudentCicles[]
+  groups      StudentOnGroups[]
+  courses     StudentOnCourses[]
+}
+
+model StudentCicles {
+  studentId Int
+  cicleId   Int
+  student   Student @relation(fields: [studentId], references: [id])
+  cicle     Cicle   @relation(fields: [cicleId], references: [id])
+
+  @@id([studentId, cicleId])
+}
+
+model Cicle {
+  id              Int         @id @default(autoincrement())
+  name            String
+  group           Group[]
+  students        StudentCicles[]
+}
+
+model Group {
+  id              Int         @id @default(autoincrement())
+  name            String
+  cicle           Cicle       @relation(fields: [cicleId], references: [id])
+  cicleId         Int
+  students        StudentOnGroups[]
+  courses         GroupCourses[]
+}
+
+model GroupCourses {
+  groupId         Int
+  courseId        Int
+  group           Group           @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  course          Course          @relation(fields: [courseId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@id([groupId, courseId])
+}
+
+model Course {
+  id              Int          @id @default(autoincrement())
+  name            String
+  link            String
+  students        StudentOnCourses[]
+  groups          GroupCourses[]
+}
+
+
+model StudentOnCourses {
+  studentId         Int
+  courseId          Int
+  student           Student         @relation(fields: [studentId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  course            Course          @relation(fields: [courseId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@id([studentId, courseId])
+}
+
+//model Student {
+//  id                Int         @id @default(autoincrement())
+//  usuario           String
+//  password          String
+//  name              String
+//  role              Role        @default(USER)
+//  token             String?
+//  groups            StudentOnGroups[]
+//  courses           StudentOnCourses[]
+//}
+
+model StudentOnGroups {
+  studentId          Int
+  groupId            Int
+  student            Student     @relation(fields: [studentId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  group              Group       @relation(fields: [groupId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@id([studentId, groupId])
+}
+
+
+
+model Logs {
+  id               Int        @id @default(autoincrement())
+  errorDescription String?
+  message          String?
+  errorContent     String?
+  createdAt        DateTime   @default(now())
+}
+
+enum Role {
+  ADMIN
+  USER
+}

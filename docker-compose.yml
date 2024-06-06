@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cimade-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: "postgresql://postgres:admin@postgres:5431/binex"
+      # Otras variables de entorno necesarias para tu aplicación
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres
+    container_name: postgrest
+    restart: always
+    ports:
+      - "5431:5431"
+    environment:
+      POSTGRES_DB: binex
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - ./data:/var/lib/postgresql/data
