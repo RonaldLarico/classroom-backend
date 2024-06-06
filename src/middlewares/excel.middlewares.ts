@@ -7,6 +7,7 @@ import { Role, UserData } from '../utils/format.server';
 import { groupService } from '../services/group.services';
 import { cycleService } from '../services/cycle.services';
 import authServices from '../services/auth.services';
+import { link } from 'fs';
 
 interface RequestWithStudentsData extends ExpressRequest {
   userData?: UserData[];
@@ -88,9 +89,11 @@ const excelUpload = async (
       }));
 
       for (const group of groups) {
-        const cicleIdPromise = obtenerId(group);
-        const cicleeId = await cicleIdPromise ?? -1;
-        await groupService.create([{ name: group, cicleId: cicleeId }]); // Llama al método create del groupService
+        const cycleIdPromise = obtenerId(group);
+        const cycleeId = await cycleIdPromise ?? -1;
+        const groupData = { name: group, cycleId: cycleeId, link: undefined };
+        await groupService.create([groupData]);
+
       }
       next();
     } catch (error) {

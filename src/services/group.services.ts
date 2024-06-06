@@ -1,10 +1,11 @@
-import { Cicle, Group, Student } from '@prisma/client';
+import { Cycle, Group, Student } from '@prisma/client';
 import { prisma } from "../utils/prisma.server";
 
 
 interface GroupCreationData {
   name: string;
-  cicleId: number;
+  link?: string | undefined;
+  cycleId: number;
 }
 
 export class groupService {
@@ -16,6 +17,7 @@ export class groupService {
         select: {
           id: true,
           name: true,
+          link: true,
         },
       });
       return result;
@@ -30,6 +32,7 @@ export class groupService {
         select: {
           id: true,
           name: true,
+          link: true,
         },
       });
       return result;
@@ -42,11 +45,11 @@ export class groupService {
     const results: (Group | null)[] = [];
     try {
       for (const groupData of data) {
-        const { name, cicleId } = groupData;
+        const { name, cycleId, link } = groupData;
         // Verificar si el grupo ya existe
         const existingGroup = await prisma.group.findFirst({
           where: {
-            cicleId,
+            cycleId,
             name, // Utiliza el nombre como filtro
           },
         });
@@ -58,7 +61,8 @@ export class groupService {
           const result = await prisma.group.create({
             data: {
               name,
-              cicle: { connect: { id: cicleId } }
+              link,
+              cycle: { connect: { id: cycleId } },
             },
           });
           results.push(result);
@@ -73,7 +77,7 @@ export class groupService {
 
   static async delete(id: Group["id"]) {
     try {
-      const result = await prisma.cicle.delete({
+      const result = await prisma.cycle.delete({
         where: { id }
       });
       return result;
