@@ -24,10 +24,6 @@ export class studentServices {
           groupId: true,
           }
         },
-        cicles: { select: {
-          cicleId: true,
-          }
-        }
       }
     })
     return result;
@@ -49,6 +45,10 @@ export class studentServices {
           password: true,
           name: true,
           role: true,
+          groups: { select: {
+            groupId: true,
+          }
+        }
         },
         take,
         skip,

@@ -1,13 +1,12 @@
 import { Request as ExpressRequest, Response, NextFunction } from 'express';
 import path from 'path';
 import multer from 'multer';
-import * as xlsx from 'xlsx';
+import xlsxPopulate from 'xlsx-populate';
 import { PrismaClient } from '@prisma/client';
 import { Role, UserData } from '../utils/format.server';
 import { groupService } from '../services/group.services';
 import { cycleService } from '../services/cycle.services';
 import authServices from '../services/auth.services';
-import { link } from 'fs';
 
 interface RequestWithStudentsData extends ExpressRequest {
   userData?: UserData[];
@@ -22,66 +21,72 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage }).single('excelFile');
+const upload = multer({ storage }).any();
 
 const excelUpload = async (
   req: RequestWithStudentsData,
   res: Response,
   next: NextFunction
 ) => {
+  console.log("Entrando a ......excel")
   upload(req, res, async (err) => {
     if (err) {
+      console.log("Error al subir el archivo: ", err)
       return res.status(400).json({ error: 'Error al cargar el archivo Excel' });
     }
-    if (!req.file || !req.file.originalname) {
-      return res.status(400).json({ error: 'No se ha proporcionado ningún archivo' });
+    console.log("Archivo subido correctamente")
+    if (!Array.isArray(req.files)) {
+      // Si req.files no es un array, entonces asumimos que es un objeto con campos de archivo
+      if (!req.files || !req.files['excelFile']) {
+        console.log("Ningún archivo proporcionado")
+        return res.status(400).json({ error: 'No se ha proporcionado ningún archivo' });
+      }
+    } else {
+      // Si req.files es un array, entonces asumimos que contiene los archivos directamente
+      if (!req.files || req.files.length === 0) {
+        console.log("Ningún archivo proporcionado")
+        return res.status(400).json({ error: 'No se ha proporcionado ningún archivo' });
+      }
     }
-    const fileName = req.file.originalname;
-    console.log(fileName);
+    const fileName = Array.isArray(req.files) ? req.files[0].originalname : req.files['excelFile'][0].originalname;
     const filePath = path.join(process.cwd(), 'uploads', 'excel', fileName);
-    console.log(filePath);
+    console.log('Ruta del archivo:', filePath);
+
     try {
-      console.log(filePath);
-      const workbook = xlsx.readFile(filePath, { cellFormula: false});
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      let endRow;
-      if (sheet['!ref']) {
-        endRow = sheet['!ref'].split(':')[1]; // Obtén la segunda parte de la referencia si la primera parte existe
-      } else {
-        console.error('La propiedad "!ref" de la hoja es undefined.');
+      const workbook = await xlsxPopulate.fromFileAsync(filePath);
+      const sheet = workbook.sheet(0);
+      const usedRange = sheet.usedRange();
+      const endRow = usedRange.bottomRight().rowNumber();
+
+      const groups: string[] = [];
+      const names: string[] = [];
+      const users: string[] = [];
+      const passwords: string[] = [];
+      const roles: Role[] = [];
+
+      for (let i = 2; i <= endRow; i++) {
+        const group = sheet.cell(`B${i}`).value();
+        const name = sheet.cell(`E${i}`).value();
+        const user = sheet.cell(`T${i}`).value();
+        const password = sheet.cell(`U${i}`).value();
+        const role = sheet.cell(`V${i}`).value();
+
+        groups.push(group);
+        names.push(name);
+        users.push(user);
+        passwords.push(password);
+        roles.push(role);
       }
-      const range = { s: { c: 1, r: 2 }, e: { c: 6, r: endRow } }; // Columnas B (1) a V (21), fila 5 en adelante
 
-      // Convertir las celdas en JSON, tomando solo las celdas dentro del rango especificado
-      const data: unknown[][] = xlsx.utils.sheet_to_json(sheet, { header: 1, range: range }) as unknown[][];
+      const usersData = groups.map((group, index) => ({
+        group,
+        name: names[index],
+        user: users[index],
+        password: passwords[index],
+        role: roles[index],
+      }));
 
-      // Extraer los datos de cada columna
-      const groups = data.map(row => row[0]) as string[]; // Columna B (index 0)
-      const names = data.map(row => row[1]) as string[]; // Columna E (index 4)
-      const users = data.map(row => row[2]) as string[]; // Columna T (index 19)
-      const passwords = data.map(row => row[3]) as string[]; // Columna U (index 20)
-      const roles = data.map(row => row[4]) as Role[]; // Columna V (index 21)
-
-      // Registrar los usuarios en la base de datos
-      const usersData = [];
-      for (let i = 0; i < names.length; i++) {
-        const userData = {
-          group: groups[i],
-          name: names[i],
-          user: users[i],
-          password: passwords[i],
-          role: roles[i],
-        };
-        usersData.push(userData);
-      }
-      console.log(usersData);
       req.userData = usersData;
-      // Registrar usuarios de forma individual
-      if (!Array.isArray(usersData)) {
-        console.error('usersData no es un array');
-        return res.status(500).json({ error: 'Error interno: datos de usuario no válidos' });
-      }
 
       await Promise.all(usersData.map(async (userData) => {
         const { name, user, password, role } = userData;
@@ -89,16 +94,15 @@ const excelUpload = async (
       }));
 
       for (const group of groups) {
-        const cycleIdPromise = obtenerId(group);
-        const cycleeId = await cycleIdPromise ?? -1;
-        const groupData = { name: group, cycleId: cycleeId, link: undefined };
+        const cycleId = await obtenerId(group) ?? -1;
+        const groupData = { name: group, cycleId, link: undefined };
         await groupService.create([groupData]);
-
       }
+
       next();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al procesar el archivo Excel:', error);
-      return res.status(500).json({ error: 'Error interno al procesar el archivo Excel' });
+      return res.status(500).json({ error: 'Error interno al procesar el archivo Excel', errorMessage: error.message });
     }
   });
 };
@@ -107,9 +111,9 @@ export default excelUpload;
 
 const obtenerId = async (groupName: string): Promise<number | null> => {
   try {
-    const cicle = await cycleService.getCycle(groupName); // Obtiene el ciclo a partir del nombre del grupo
-    if (cicle) {
-      return cicle.id; // Devuelve el ID del ciclo
+    const cycle = await cycleService.getCycle(groupName);
+    if (cycle) {
+      return cycle.id;
     } else {
       console.error('No se encontró el ciclo correspondiente.');
       return null;

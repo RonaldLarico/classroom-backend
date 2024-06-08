@@ -20,24 +20,13 @@ model Student {
   token       String?
   createdAt   DateTime    @default(now())
   updateAt    DateTime?   @updatedAt
-  cycles      StudentCicles[]
   groups      StudentOnGroups[]
-}
-
-model StudentCicles {
-  studentId Int
-  cycleId   Int
-  student   Student @relation(fields: [studentId], references: [id])
-  cycle     Cycle   @relation(fields: [cycleId], references: [id])
-
-  @@id([studentId, cycleId])
 }
 
 model Cycle {
   id              Int         @id @default(autoincrement())
   name            String
   group           Group[]
-  students        StudentCicles[]
 }
 
 model Group {
