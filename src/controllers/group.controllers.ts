@@ -56,8 +56,8 @@ export const createGroup = async (
   next: NextFunction
 ) => {
   try {
-    const { name, cycleId, link } = req.body;
-    const result = await groupService.create([{ name, cycleId, link }]);
+    const { name, cycleName, link } = req.body;
+    const result = await groupService.create([{ name, cycleName, link }]);
     if (result) {
       res.status(201).json(result);
     } else {

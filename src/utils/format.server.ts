@@ -66,12 +66,13 @@ export type Payload = {
 
 export type UserData = {
 
-  group: string;
+
   name: string;
-  course?: string;
+
   user: string;
   password: string;
   role: Role;
+
 };
 
 export type Role = 'ADMIN' | 'USER';

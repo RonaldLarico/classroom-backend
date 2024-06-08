@@ -1,6 +1,6 @@
 import { Student } from "@prisma/client";
 import { Prisma } from "@prisma/client";
-import { loginPick, userPick, UserRole } from "../utils/format.server";
+import { loginPick, UserData, userPick, UserRole } from "../utils/format.server";
 import { prisma } from "../utils/prisma.server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -11,11 +11,11 @@ const secret = process.env.ACCESS_TOKEN_SECRET;
 
 export class authServices {
 
-  static async registerMultiple(usersData: UserRole[]) {
+  static async registerMultiple(usersData: UserData[]) {
     try {
       const newUsers = await Promise.all(usersData.map(async (userData) => {
         const { user, password, name, role } = userData;
-        if (!user || !password || !name ) {
+        if (!user || !password || !name || !role) {
           throw new Error('Datos incompletos. Asegúrate de proporcionar email, password, firstName y lastName.');
         }
         if (!password) {
@@ -24,10 +24,10 @@ export class authServices {
         const passwordHash = await bcrypt.hash(password, 10);
         const newUser = await prisma.student.create({
           data: {
-            user,
+            user: String(user),
             password: passwordHash,
-            name,
-            role,
+            name: name,
+            role: role,
           },
         });
         return newUser;

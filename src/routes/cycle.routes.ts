@@ -8,5 +8,5 @@ import { authenticate } from "../middlewares/auth.middlewares";
 export const cycleRoute = Router();
 
 cycleRoute.get("/cycles", showAllCycle)
-cycleRoute.post("/cycle", authenticate, adminRole, createCycle)
+cycleRoute.post("/cycle", createCycle)
 cycleRoute.delete("/cycle/:id", authenticate, adminRole, deleteCycle)

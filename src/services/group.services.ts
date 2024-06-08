@@ -5,7 +5,7 @@ import { prisma } from "../utils/prisma.server";
 interface GroupCreationData {
   name: string;
   link?: string | undefined;
-  cycleId: number;
+  cycleName: string;
 }
 
 export class groupService {
@@ -45,11 +45,23 @@ export class groupService {
     const results: (Group | null)[] = [];
     try {
       for (const groupData of data) {
-        const { name, cycleId, link } = groupData;
+        const { name, cycleName, link } = groupData;
+        // Verificar si el ciclo asociado al grupo existe
+        const existingCycle = await prisma.cycle.findFirst({
+          where: {
+            name: cycleName,
+          },
+        });
+        if (!existingCycle) {
+          // Si el ciclo no existe, maneja este caso apropiadamente
+          console.error(`No se encontró el ciclo correspondiente para el grupo ${name}`);
+          // Puedes lanzar un error, enviar una respuesta al usuario, o realizar alguna acción alternativa según tus requisitos
+          continue; // Continuar con el siguiente grupo
+        }
         // Verificar si el grupo ya existe
         const existingGroup = await prisma.group.findFirst({
           where: {
-            cycleId,
+            cycleId: existingCycle.id,
             name, // Utiliza el nombre como filtro
           },
         });
@@ -62,7 +74,7 @@ export class groupService {
             data: {
               name,
               link,
-              cycle: { connect: { id: cycleId } },
+              cycle: { connect: { id: existingCycle.id } },
             },
           });
           results.push(result);

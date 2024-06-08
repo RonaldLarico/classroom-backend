@@ -55,48 +55,55 @@ const excelUpload = async (
     try {
       const workbook = await xlsxPopulate.fromFileAsync(filePath);
       const sheet = workbook.sheet(0);
-      const usedRange = sheet.usedRange();
+      const usedRange = findUsedRange(sheet);
+       // Verificamos si usedRange es un objeto y si tiene el método bottomRight()
+       if (!usedRange || typeof usedRange.bottomRight !== 'function') {
+        throw new Error('La propiedad usedRange no es válida');
+      }
       const endRow = usedRange.bottomRight().rowNumber();
 
-      const groups: string[] = [];
-      const names: string[] = [];
-      const users: string[] = [];
-      const passwords: string[] = [];
-      const roles: Role[] = [];
+      const userData: UserData[] = [];
+      const groupData: any[] = [];
 
       for (let i = 2; i <= endRow; i++) {
         const group = sheet.cell(`B${i}`).value();
-        const name = sheet.cell(`E${i}`).value();
-        const user = sheet.cell(`T${i}`).value();
-        const password = sheet.cell(`U${i}`).value();
-        const role = sheet.cell(`V${i}`).value();
+        const name = sheet.cell(`C${i}`).value();
+        const user = sheet.cell(`D${i}`).value();
+        const password = String(sheet.cell(`E${i}`).value());
+        const role = sheet.cell(`F${i}`).value();
+        const cycleName = sheet.cell(`G${i}`).value();
 
-        groups.push(group);
-        names.push(name);
-        users.push(user);
-        passwords.push(password);
-        roles.push(role);
+        const userItem = {
+          name,
+          user,
+          password,
+          role
+        };
+        const groupItem = {
+          group,
+          cycleName
+        };
+
+        userData.push(userItem);
+        groupData.push(groupItem);
       }
 
-      const usersData = groups.map((group, index) => ({
-        group,
-        name: names[index],
-        user: users[index],
-        password: passwords[index],
-        role: roles[index],
-      }));
+      req.userData = userData;
+      console.log(userData);
+      console.log('Tipo de userData:', typeof userData);
+      /* if (!Array.isArray(userData)) {
+        throw new Error('usersData no es un array');
+      } */
+      // Verificar si usersData está definido y si tiene al menos un elemento
+      if (!userData || userData.length === 0) {
+        // Manejar el caso cuando usersData no está definido o está vacío
+        throw new Error('usersData no está definido o está vacío');
+      }
 
-      req.userData = usersData;
+      await authServices.registerMultiple(userData);
 
-      await Promise.all(usersData.map(async (userData) => {
-        const { name, user, password, role } = userData;
-        await authServices.registerMultiple([{ name, user, password, role }]);
-      }));
-
-      for (const group of groups) {
-        const cycleId = await obtenerId(group) ?? -1;
-        const groupData = { name: group, cycleId, link: undefined };
-        await groupService.create([groupData]);
+      for (const item of groupData) {
+        await groupService.create([item]);
       }
 
       next();
@@ -123,3 +130,38 @@ const obtenerId = async (groupName: string): Promise<number | null> => {
     throw error;
   }
 };
+
+function findUsedRange(sheet: any) {
+  let startRow = Infinity;
+  let endRow = 0;
+  let startCol = Infinity;
+  let endCol = 0;
+
+  const usedCells = sheet.usedRange().value();
+
+  usedCells.forEach((row: any, rowIndex: number) => {
+    row.forEach((cell: any, colIndex: number) => {
+      if (cell !== null && cell !== undefined && cell !== '') {
+        if (rowIndex < startRow) {
+          startRow = rowIndex;
+        }
+        if (rowIndex > endRow) {
+          endRow = rowIndex;
+        }
+        if (colIndex < startCol) {
+          startCol = colIndex;
+        }
+        if (colIndex > endCol) {
+          endCol = colIndex;
+        }
+      }
+    });
+  });
+
+  return {
+    bottomRight: () => ({
+      rowNumber: () => endRow + 1,
+      columnNumber: () => endCol + 1
+    })
+  };
+}

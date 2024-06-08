@@ -5,19 +5,19 @@ export class cycleService {
 
   static async getCycle(groupName: string): Promise<Cycle | null> {
     try {
-      const cicle = await prisma.cycle.findFirst({
-        where: { group: { some: { name: groupName } }}, // Busca un ciclo que tenga un grupo con el nombre dado
+      const cycle = await prisma.cycle.findFirst({
+        where: { name: groupName }, // Busca un ciclo con el nombre dado
         select: {
           id: true,
           name: true,
         },
       });
-      return cicle;
+      return cycle;
     } catch (error) {
-      console.error('Error al obtener el ID del ciclo:', error);
+      console.error('Error al obtener el ciclo:', error);
       throw error;
     }
-  };
+  }
 
   static async getAll () {
     try {

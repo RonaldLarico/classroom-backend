@@ -47,8 +47,6 @@ model StudentOnGroups {
   @@id([studentId, groupId])
 }
 
-
-
 model Logs {
   id               Int        @id @default(autoincrement())
   errorDescription String?
