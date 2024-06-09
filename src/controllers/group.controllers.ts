@@ -56,21 +56,30 @@ export const createGroup = async (
   next: NextFunction
 ) => {
   try {
-    const { name, cycleName, link } = req.body;
-    const result = await groupService.create([{ name, cycleName, link }]);
+    const { groupName, link, cycleName } = req.body;
+    // Llama al servicio para crear el grupo con los datos proporcionados
+    const result = await groupService.create({ groupName, link, cycleName });
+
     if (result) {
-      res.status(201).json(result);
+      res.status(201).json(result); // Si se crea correctamente, devuelve el nuevo grupo como respuesta
     } else {
       next({
         status: 400,
         message: 'Error al crear el grupo',
-        errorContent: 'El resultado es undefiend',
+        errorContent: 'El resultado es undefined',
       });
     }
   } catch (error: any) {
-    console.log(error);
+    console.error('Error en el controlador createGroup:', error);
+    next({
+      status: 500,
+      message: 'Error interno del servidor',
+      errorContent: error.message,
+    });
   }
 };
+
+
 
 export const deleteGroup = async (
   req: Request,

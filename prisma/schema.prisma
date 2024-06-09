@@ -31,7 +31,7 @@ model Cycle {
 
 model Group {
   id              Int         @id @default(autoincrement())
-  name            String
+  groupName       String
   link            String?
   cycle           Cycle       @relation(fields: [cycleId], references: [id])
   cycleId         Int

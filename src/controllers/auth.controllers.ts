@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { authServices } from "../services/auth.services";
 import { NextFunction, Request, Response } from "express";
-import { userPick } from "../utils/format.server";
+import { UserData, userPick } from "../utils/format.server";
 
 export const registerStudent = async (
   req: Request,
@@ -9,10 +9,27 @@ export const registerStudent = async (
   next: NextFunction
 ) => {
   try {
-    let usersData = req.body;
-    if (!Array.isArray(usersData)) {
-      usersData = [usersData]; // Envolver en un array si no es un array
-    }
+    let usersData: UserData[] = Array.isArray(req.body) ? req.body : [req.body];
+    console.log("userData", usersData);
+    console.log("req.body:", req.body);
+     // Asegurémonos de que usersData sea un array de objetos UserData válidos
+     usersData = usersData.filter(userData =>
+      userData && typeof userData === 'object' &&
+      (userData.name || userData.password || userData.role || userData.user)
+    );
+
+    console.log("userData después de la limpieza:", usersData);
+    /* const incompleteData = usersData.find(userData => !userData.name || !userData.password || !userData.role || !userData.user);
+    console.log("incompleteData", incompleteData)
+    if (incompleteData) {
+      console.error('Datos incompletos:', incompleteData);
+      return next({
+        errorDescription: 'Datos incompletos',
+        status: 400,
+        message: 'Datos incompletos: ' + JSON.stringify(incompleteData),
+        errorContent: 'Datos incompletos: ' + JSON.stringify(incompleteData),
+      });
+    } */
     const result = await authServices.registerMultiple(usersData);
     if (!result) {
       next({
@@ -21,24 +38,10 @@ export const registerStudent = async (
         message: "Error, dirección de email ya existe",
         errorContent: "Unique constraint failed on the fields: (`email`)",
       });
-    } else
-      res.status(201).json(result);
+    } else {
+      res.status(201).json(result);}
   } catch (error:any) {
     console.log(error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code == "P2002") {
-        next({
-          errorDescription: error.meta?.target,
-          status: 400,
-          message: "Error: Email existente",
-          errorContent: "Error: Duplicate email"
-        });
-      } else {
-        res.status(400).json(error);
-      }
-    } else {
-      res.status(400).json(error);
-    }
   }
 };
 

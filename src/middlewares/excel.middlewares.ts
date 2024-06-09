@@ -67,21 +67,13 @@ const excelUpload = async (
       const groupData: any[] = [];
 
       for (let i = 2; i <= endRow; i++) {
-        const group = sheet.cell(`B${i}`).value();
+        const groupName = sheet.cell(`B${i}`).value();
         const name = sheet.cell(`C${i}`).value();
         const user = sheet.cell(`D${i}`).value();
         const password = String(sheet.cell(`E${i}`).value());
         const role = sheet.cell(`F${i}`).value();
-        let cycleName = sheet.cell(`G${i}`).value();
-
-     // Verificar si cycleName es undefined o una cadena vacía
-  if (!cycleName || cycleName.trim() === '') {
-    console.error(`No se encontró el ciclo correspondiente para el grupooooo "${group}"`);
-    continue; // O puedes utilizar "break;" si deseas detener el bucle
-  }
-
-  cycleName = cycleName.trim(); // Eliminar espacios en blanco adicionales
-  console.log(`Nombre del ciclo para el grupo ${group}: ${cycleName}`);
+        const link = sheet.cell(`G${i}`).value();
+        const cycleName = sheet.cell(`H${i}`).value();
 
         const userItem = {
           name,
@@ -90,28 +82,23 @@ const excelUpload = async (
           role
         };
         const groupItem = {
-          group,
+          groupName,
+          link,
           cycleName
         };
 
         userData.push(userItem);
         groupData.push(groupItem);
       }
-
-      const jsonDataUser = JSON.stringify(userData);
-      const jsonDataGroup = JSON.stringify(groupData);
-
-      req.userData = JSON.parse(jsonDataUser);
-      req.groupData = JSON.parse(jsonDataGroup);
+      req.userData = userData;
+      req.groupData = groupData;
       console.log('Tipo de req.userData:', typeof req.userData);
 
 
       console.log(groupData);
       console.log(userData);
       console.log('Tipo de userData:', typeof userData);
-      /* if (!Array.isArray(userData)) {
-        throw new Error('usersData no es un array');
-      } */
+
       // Verificar si usersData está definido y si tiene al menos un elemento
       if (!userData || userData.length === 0) {
         // Manejar el caso cuando usersData no está definido o está vacío
@@ -138,21 +125,6 @@ console.log('groupData length:', groupData.length);
 
 export default excelUpload;
 
-/* const obtenerId = async (groupName: string): Promise<number | null> => {
-  try {
-    const cycle = await cycleService.getCycle(groupName);
-    if (cycle) {
-      return cycle.id;
-    } else {
-      console.error('No se encontró el ciclo correspondiente.');
-      return null;
-    }
-  } catch (error) {
-    console.error('Error al obtener el ID del ciclo:', error);
-    throw error;
-  }
-};
- */
 function findUsedRange(sheet: any) {
   let startRow = Infinity;
   let endRow = 0;
