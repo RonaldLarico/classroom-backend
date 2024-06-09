@@ -10,6 +10,7 @@ import authServices from '../services/auth.services';
 
 interface RequestWithStudentsData extends ExpressRequest {
   userData?: UserData[];
+  groupData?: any[];
 }
 
 const storage = multer.diskStorage({
@@ -57,7 +58,7 @@ const excelUpload = async (
       const sheet = workbook.sheet(0);
       const usedRange = findUsedRange(sheet);
        // Verificamos si usedRange es un objeto y si tiene el método bottomRight()
-       if (!usedRange || typeof usedRange.bottomRight !== 'function') {
+      if (!usedRange || typeof usedRange.bottomRight !== 'function') {
         throw new Error('La propiedad usedRange no es válida');
       }
       const endRow = usedRange.bottomRight().rowNumber();
@@ -71,7 +72,16 @@ const excelUpload = async (
         const user = sheet.cell(`D${i}`).value();
         const password = String(sheet.cell(`E${i}`).value());
         const role = sheet.cell(`F${i}`).value();
-        const cycleName = sheet.cell(`G${i}`).value();
+        let cycleName = sheet.cell(`G${i}`).value();
+
+     // Verificar si cycleName es undefined o una cadena vacía
+  if (!cycleName || cycleName.trim() === '') {
+    console.error(`No se encontró el ciclo correspondiente para el grupooooo "${group}"`);
+    continue; // O puedes utilizar "break;" si deseas detener el bucle
+  }
+
+  cycleName = cycleName.trim(); // Eliminar espacios en blanco adicionales
+  console.log(`Nombre del ciclo para el grupo ${group}: ${cycleName}`);
 
         const userItem = {
           name,
@@ -88,7 +98,15 @@ const excelUpload = async (
         groupData.push(groupItem);
       }
 
-      req.userData = userData;
+      const jsonDataUser = JSON.stringify(userData);
+      const jsonDataGroup = JSON.stringify(groupData);
+
+      req.userData = JSON.parse(jsonDataUser);
+      req.groupData = JSON.parse(jsonDataGroup);
+      console.log('Tipo de req.userData:', typeof req.userData);
+
+
+      console.log(groupData);
       console.log(userData);
       console.log('Tipo de userData:', typeof userData);
       /* if (!Array.isArray(userData)) {
@@ -103,8 +121,12 @@ const excelUpload = async (
       await authServices.registerMultiple(userData);
 
       for (const item of groupData) {
-        await groupService.create([item]);
+        await groupService.create(item);
       }
+
+      console.log('groupData:', groupData);
+console.log('groupData length:', groupData.length);
+
 
       next();
     } catch (error: any) {
@@ -116,7 +138,7 @@ const excelUpload = async (
 
 export default excelUpload;
 
-const obtenerId = async (groupName: string): Promise<number | null> => {
+/* const obtenerId = async (groupName: string): Promise<number | null> => {
   try {
     const cycle = await cycleService.getCycle(groupName);
     if (cycle) {
@@ -130,7 +152,7 @@ const obtenerId = async (groupName: string): Promise<number | null> => {
     throw error;
   }
 };
-
+ */
 function findUsedRange(sheet: any) {
   let startRow = Infinity;
   let endRow = 0;

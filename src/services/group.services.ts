@@ -1,5 +1,6 @@
 import { Cycle, Group, Student } from '@prisma/client';
 import { prisma } from "../utils/prisma.server";
+import { cycleService } from './cycle.services';
 
 
 interface GroupCreationData {
@@ -44,17 +45,17 @@ export class groupService {
   static async create(data: GroupCreationData[]): Promise<(Group | null)[]> {
     const results: (Group | null)[] = [];
     try {
+      // Verificar si data es un array antes de comenzar el bucle
+    if (!Array.isArray(data)) {
+      throw new Error('Los datos no son un array iterable');
+    }
       for (const groupData of data) {
         const { name, cycleName, link } = groupData;
         // Verificar si el ciclo asociado al grupo existe
-        const existingCycle = await prisma.cycle.findFirst({
-          where: {
-            name: cycleName,
-          },
-        });
+        const existingCycle = await cycleService.getCycle(cycleName);
         if (!existingCycle) {
           // Si el ciclo no existe, maneja este caso apropiadamente
-          console.error(`No se encontró el ciclo correspondiente para el grupo ${name}`);
+          console.error(`No se encontró el ciclo correspondiente para el grupooo ${name}`);
           // Puedes lanzar un error, enviar una respuesta al usuario, o realizar alguna acción alternativa según tus requisitos
           continue; // Continuar con el siguiente grupo
         }

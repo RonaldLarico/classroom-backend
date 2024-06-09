@@ -57,12 +57,12 @@ export type errorProp = {
   message: string;
 };
 
-export type Payload = {
+/* export type Payload = {
   email: string;
   password: string;
   firstName: string;
   lastName: string;
-};
+}; */
 
 export type UserData = {
 

@@ -12,11 +12,16 @@ const secret = process.env.ACCESS_TOKEN_SECRET;
 export class authServices {
 
   static async registerMultiple(usersData: UserData[]) {
+    console.log('Tipo de usersDataaaaa:', typeof usersData);
+    if (!Array.isArray(usersData)) {
+      throw new Error('usersData debe ser un array');
+    }
     try {
       const newUsers = await Promise.all(usersData.map(async (userData) => {
         const { user, password, name, role } = userData;
+        console.log("abc", userData)
         if (!user || !password || !name || !role) {
-          throw new Error('Datos incompletos. Asegúrate de proporcionar email, password, firstName y lastName.');
+          throw new Error('Datos incompletos. Asegúrate de proporcionar name, password, role y user.');
         }
         if (!password) {
           throw new Error('La contraseña no puede estar vacía.');

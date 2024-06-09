@@ -9,7 +9,11 @@ export const registerStudent = async (
   next: NextFunction
 ) => {
   try {
-    const result = await authServices.registerMultiple(req.body);
+    let usersData = req.body;
+    if (!Array.isArray(usersData)) {
+      usersData = [usersData]; // Envolver en un array si no es un array
+    }
+    const result = await authServices.registerMultiple(usersData);
     if (!result) {
       next({
         errorDescription: "Unique constraint failed on the fields: (`email`)",
