@@ -57,9 +57,18 @@ export const createGroup = async (
 ) => {
   try {
     const { groupName, link, cycleName } = req.body;
+    console.log("req.body", req.body);
     // Llama al servicio para crear el grupo con los datos proporcionados
+    console.log("cycleName en group.controllers", cycleName)
+    // Si cycleName no está definido, devuelve un error
+    if (cycleName === undefined || cycleName === "") {
+      return next({
+        status: 400,
+        message: 'El nombre del ciclo no está definidottttt',
+        errorContent: 'El nombre del ciclo es requeridottttttttt',
+      });
+    }
     const result = await groupService.create({ groupName, link, cycleName });
-
     if (result) {
       res.status(201).json(result); // Si se crea correctamente, devuelve el nuevo grupo como respuesta
     } else {

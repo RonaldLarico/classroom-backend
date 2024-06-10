@@ -70,8 +70,13 @@ export type UserData = {
   password: string;
   role: Role;
   groupName: string;
-
 };
+
+export type GroupData = {
+  groupName: string;
+  link: string;
+  cycleName: string;
+}
 
 export type Role = 'ADMIN' | 'USER';
 

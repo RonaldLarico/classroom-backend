@@ -5,8 +5,8 @@ import { cycleService } from './cycle.services';
 
 interface GroupCreationData {
   groupName: string;
-  link?: string | undefined;
-  cycleName?: string | undefined;
+  link?: string;
+  cycleName?: string;
 }
 
 export class groupService {
@@ -76,10 +76,16 @@ export class groupService {
 
 static async create(data: GroupCreationData): Promise<Group | null> {
   try {
-      const { groupName, link, cycleName } = data;
-      if (!cycleName) {
-        throw new Error(`El nombre del ciclo no está definido`);
-    }
+    const { groupName, link, cycleName } = data;
+    console.log("cycleName en create group.services", cycleName)
+    if (!cycleName) {
+      throw new Error(`El nombre del ciclo no está definido`);
+      }
+    console.log("groupName", groupName)
+        // Verificar si cycleName tiene un valor antes de continuar
+        /* if (cycleName === undefined) {
+        throw new Error(`El nombre del ciclo no está definidoooo`);
+        } */
       const cycles = await prisma.cycle.findMany({
           where: { name: { in: [cycleName]} }
       });
@@ -93,7 +99,7 @@ static async create(data: GroupCreationData): Promise<Group | null> {
           },
       });
       if (existingGroup) {
-          console.log(`El grupo ${groupName} ya existe.`);
+          //console.log(`El grupo ${groupName} ya existe.`);
           return existingGroup;
       }
       const newGroup = await prisma.group.create({

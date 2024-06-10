@@ -3,14 +3,14 @@ import path from 'path';
 import multer from 'multer';
 import xlsxPopulate from 'xlsx-populate';
 import { PrismaClient } from '@prisma/client';
-import { Role, UserData } from '../utils/format.server';
+import { GroupData, Role, UserData } from '../utils/format.server';
 import { groupService } from '../services/group.services';
 import { cycleService } from '../services/cycle.services';
 import authServices from '../services/auth.services';
 
 interface RequestWithStudentsData extends ExpressRequest {
   userData?: UserData[];
-  groupData?: any[];
+  groupData?: GroupData[];
 }
 
 const storage = multer.diskStorage({
@@ -64,7 +64,7 @@ const excelUpload = async (
       const endRow = usedRange.bottomRight().rowNumber();
 
       const userData: UserData[] = [];
-      const groupData: any[] = [];
+      const groupData: GroupData[] = [];
 
       for (let i = 2; i <= endRow; i++) {
         const groupName = sheet.cell(`B${i}`).value();
@@ -74,6 +74,10 @@ const excelUpload = async (
         const role = sheet.cell(`F${i}`).value();
         const link = sheet.cell(`G${i}`).value();
         const cycleName = sheet.cell(`H${i}`).value();
+
+        if (!groupName || !name || !user || !password || !role || !link || !cycleName) {
+          throw new Error('Faltan campos obligatorios');
+        }
 
         const userItem = {
           name,
@@ -91,17 +95,19 @@ const excelUpload = async (
         userData.push(userItem);
         groupData.push(groupItem);
       }
-      req.userData = userData;
-      req.groupData = groupData;
-      console.log('Tipo de req.userData:', typeof req.userData);
-
+      
       for (const item of groupData) {
         await groupService.create(item);
-      }
+        }
 
+      req.userData = userData;
+      req.groupData = groupData;
+      
+        
+      /* console.log('Tipo de req.userData:', typeof req.userData);
       console.log(groupData);
       console.log(userData);
-      console.log('Tipo de userData:', typeof userData);
+      console.log('Tipo de userData:', typeof userData); */
 
       // Verificar si usersData está definido y si tiene al menos un elemento
       if (!userData || userData.length === 0) {
@@ -112,15 +118,15 @@ const excelUpload = async (
       await authServices.registerMultiple(userData);
 
 
-      console.log('groupData:', groupData);
-console.log('groupData length:', groupData.length);
+      /* console.log('groupData:', groupData);
+console.log('groupData length:', groupData.length); */
 
 
-      next();
-    } catch (error: any) {
-      console.error('Error al procesar el archivo Excel:', error);
-      return res.status(500).json({ error: 'Error interno al procesar el archivo Excel', errorMessage: error.message });
-    }
+} catch (error: any) {
+  console.error('Error al procesar el archivo Excel:', error);
+  return res.status(500).json({ error: 'Error interno al procesar el archivo Excel', errorMessage: error.message });
+  }
+  next();
   });
 };
 
