@@ -5,6 +5,7 @@ import { prisma } from "../utils/prisma.server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
+import { group } from "console";
 
 dotenv.config();
 const secret = process.env.ACCESS_TOKEN_SECRET;
@@ -18,26 +19,51 @@ export class authServices {
     }
     try {
       const newUsers = await Promise.all(usersData.map(async (userData) => {
-        const { user, password, name, role } = userData;
+        const { user, password, name, role, groupName } = userData;
         console.log("abc", userData)
-        if (!user || !password || !name || !role) {
+        if (!user || !password || !name || !role || !groupName) {
           throw new Error('Datos incompletos. Asegúrate de proporcionar name, password, role y user.');
         }
         if (!password) {
           throw new Error('La contraseña no puede estar vacía.');
         }
         const passwordHash = await bcrypt.hash(password, 10);
+         // Buscar el grupo correspondiente por su nombre
+        const groups = await prisma.group.findMany({
+          where: {
+            groupName
+          },
+          include: {
+            cycle: true,
+          }
+        });
+
+        if (!groups || groups.length === 0) {
+          throw new Error(`No se encontró un grupo con el nombre ${groupName}`);
+        }
+        const newUserss = await Promise.all(groups.map(async (group) => {
         const newUser = await prisma.student.create({
           data: {
             user: String(user),
             password: passwordHash,
-            name: name,
-            role: role,
+            name,
+            role,
+            groups: {
+              create: {
+                group: {
+                  connect: {
+                    id: group.id,
+                  }
+                }
+              }
+            }
           },
         });
         return newUser;
       }));
-      return newUsers;
+      return newUserss;
+    }));
+      return newUsers.flat();
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {

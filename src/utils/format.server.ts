@@ -65,13 +65,11 @@ export type errorProp = {
 }; */
 
 export type UserData = {
-
-
   name: string;
-
   user: string;
   password: string;
   role: Role;
+  groupName: string;
 
 };
 

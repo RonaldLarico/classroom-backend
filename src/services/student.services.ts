@@ -20,8 +20,13 @@ export class studentServices {
         password: true,
         name: true,
         role: true,
-        groups: { select: {
-          groupId: true,
+        groups: {
+          include: {
+            group: {
+              select: {
+                groupName: true,
+              }
+            }
           }
         },
       }
@@ -45,8 +50,13 @@ export class studentServices {
           password: true,
           name: true,
           role: true,
-          groups: { select: {
-            groupId: true,
+          groups: {
+            include: {
+              group: {
+                select: {
+                  groupName: true,
+                }
+              }
           }
         }
         },

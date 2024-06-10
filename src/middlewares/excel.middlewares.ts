@@ -79,12 +79,13 @@ const excelUpload = async (
           name,
           user,
           password,
-          role
+          role,
+          groupName,
         };
         const groupItem = {
           groupName,
           link,
-          cycleName
+          cycleName,
         };
 
         userData.push(userItem);
@@ -94,6 +95,9 @@ const excelUpload = async (
       req.groupData = groupData;
       console.log('Tipo de req.userData:', typeof req.userData);
 
+      for (const item of groupData) {
+        await groupService.create(item);
+      }
 
       console.log(groupData);
       console.log(userData);
@@ -107,9 +111,6 @@ const excelUpload = async (
 
       await authServices.registerMultiple(userData);
 
-      for (const item of groupData) {
-        await groupService.create(item);
-      }
 
       console.log('groupData:', groupData);
 console.log('groupData length:', groupData.length);

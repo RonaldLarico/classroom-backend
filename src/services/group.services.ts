@@ -19,6 +19,22 @@ export class groupService {
           id: true,
           groupName: true,
           link: true,
+          cycle: {
+            select: {
+              name: true,
+            }
+          },
+          students: {
+            include: {
+              student: {
+                select: {
+                  name: true,
+                  user: true,
+                  role: true,
+                }
+              }
+            }
+          }
         },
       });
       return result;
@@ -34,6 +50,22 @@ export class groupService {
           id: true,
           groupName: true,
           link: true,
+          cycle: {
+            select: {
+              name: true,
+            }
+          },
+          students: {
+            include: {
+              student: {
+                select: {
+                  name: true,
+                  user: true,
+                  role: true,
+                }
+              }
+            }
+          }
         },
       });
       return result;
@@ -42,38 +74,35 @@ export class groupService {
     }
   };
 
-  // Modifica la función create en tu servicio de grupos (group.services.ts)
 static async create(data: GroupCreationData): Promise<Group | null> {
   try {
       const { groupName, link, cycleName } = data;
-
-      // Busca el ciclo por su nombre
-      const cycle = await prisma.cycle.findFirst({
-          where: { name: cycleName }
+      if (!cycleName) {
+        throw new Error(`El nombre del ciclo no está definido`);
+    }
+      const cycles = await prisma.cycle.findMany({
+          where: { name: { in: [cycleName]} }
       });
 
-      if (!cycle) {
+      if (!cycles || cycles.length === 0) {
           throw new Error(`No se encontró el ciclo con el nombre ${cycleName}`);
       }
-
-      // Verificar si el grupo ya existe
       const existingGroup = await prisma.group.findFirst({
           where: {
-              groupName,
+              AND: [{ groupName }, { cycleId: { in: cycles.map(cycle => cycle.id)} }],
           },
       });
-
-      // Si el grupo ya existe, retornar el grupo existente
       if (existingGroup) {
           console.log(`El grupo ${groupName} ya existe.`);
           return existingGroup;
       }
-      // Si el grupo no existe, crear uno nuevo
       const newGroup = await prisma.group.create({
           data: {
-              groupName,
-              link,
-              cycle: { connect: { id: cycle.id } }
+            groupName,
+            link,
+            cycle: {
+              connect: { id: cycles[0].id }
+            }
           },
       });
       console.log(`Grupo ${groupName} creado correctamente.`);
@@ -83,7 +112,6 @@ static async create(data: GroupCreationData): Promise<Group | null> {
       throw error;
   }
 }
-
 
   static async delete(id: Group["id"]) {
     try {
