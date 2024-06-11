@@ -12,14 +12,13 @@ const secret = process.env.ACCESS_TOKEN_SECRET;
 export class authServices {
 
   static async registerMultiple(usersData: UserData[]) {
-    //console.log('Tipo de usersDataaaaa:', typeof usersData);
     if (!Array.isArray(usersData)) {
       throw new Error('usersData debe ser un array');
     }
     try {
-      const newUsers = await Promise.all(usersData.map(async (userData) => {
+      const newUsers: Student[] = [];
+      for (const userData of usersData) {
         const { user, password, name, role, groupName } = userData;
-        //console.log("abc", userData)
         if (!user || !password || !name || !role || !groupName) {
           throw new Error('Datos incompletos. Asegúrate de proporcionar name, password, role y user.');
         }
@@ -27,7 +26,8 @@ export class authServices {
           throw new Error('La contraseña no puede estar vacía.');
         }
         const passwordHash = await bcrypt.hash(password, 10);
-         // Buscar el grupo correspondiente por su nombre
+  
+        // Buscar todos los grupos correspondientes por el nombre del grupo
         const groups = await prisma.group.findMany({
           where: {
             groupName
@@ -36,38 +36,73 @@ export class authServices {
             cycle: true,
           }
         });
-
+  
         if (!groups || groups.length === 0) {
           throw new Error(`No se encontró un grupo con el nombre ${groupName}`);
         }
-        const newUserss = await Promise.all(groups.map(async (group) => {
-        const newUser = await prisma.student.create({
-          data: {
-            user: String(user),
-            password: passwordHash,
-            name,
-            role,
-            groups: {
-              create: {
+  
+        // Verificar si el usuario ya existe en la base de datos
+        const existingUser = await prisma.student.findFirst({
+          where: {
+            user: String(user)
+          }
+        });
+  
+        if (existingUser) {
+          // El usuario ya existe, verificar si las contraseñas coinciden
+          const passwordMatch = await bcrypt.compare(password, existingUser.password);
+          if (passwordMatch) {
+            // Las contraseñas coinciden, no es necesario crear un nuevo usuario
+            newUsers.push(existingUser);
+          } else {
+            // Las contraseñas no coinciden, lanzar un error
+            throw new Error('La contraseña no coincide con el usuario existente.');
+          }
+        } else {
+          // El usuario no existe, creamos uno nuevo
+          const newUser = await prisma.student.create({
+            data: {
+              user: String(user),
+              password: passwordHash,
+              name: name,
+              role: role
+            }
+          });
+          newUsers.push(newUser);
+        }
+  
+        // Para cada grupo encontrado, verificar y crear asociación si no existe
+        for (const group of groups) {
+          const existingAssociation = await prisma.studentOnGroups.findFirst({
+            where: {
+              studentId: newUsers[newUsers.length - 1].id, // Usamos el ID del usuario existente o del nuevo usuario
+              groupId: group.id
+            }
+          });
+  
+          if (!existingAssociation) {
+            // Asociar el usuario al grupo si no está asociado previamente
+            await prisma.studentOnGroups.create({
+              data: {
+                student: {
+                  connect: {
+                    id: existingUser?.id || newUsers[0].id // Usamos el ID del usuario existente o del nuevo usuario
+                  }
+                },
                 group: {
                   connect: {
-                    id: group.id,
+                    id: group.id
                   }
                 }
               }
-            }
-          },
-        });
-        return newUser;
-      }));
-      return newUserss;
-    }));
-      return newUsers.flat();
+            });
+          }
+        }
+      }
+  
+      return newUsers;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          throw new Error('Error: Email ya existente.');
-        }
       }
       throw error;
     }

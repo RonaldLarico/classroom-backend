@@ -2,7 +2,7 @@ import { Student } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../utils/prisma.server";
-import { UserRole, UserUpdate } from "../utils/format.server";
+import { UserUpdate } from "../utils/format.server";
 import jwt from "jsonwebtoken";
 import * as dotenv from 'dotenv';
 
@@ -25,6 +25,7 @@ export class studentServices {
             group: {
               select: {
                 groupName: true,
+                link: true,
               }
             }
           }
@@ -55,6 +56,7 @@ export class studentServices {
               group: {
                 select: {
                   groupName: true,
+                  link: true,
                 }
               }
           }
