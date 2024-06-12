@@ -11,14 +11,14 @@ export const showCycle = async (
     const { groupName, id } = req.params;
     const newId = parseInt(id);
     if ( typeof newId === "number" && newId >= 0) {
-      const result = await cycleService.getCycle(groupName);
+      const result = await cycleService.getCycle(groupName, newId);
       if (result) {
         res.status(200).send(result)
       } else {
         next({
           errorDescription: result,
           status: 400,
-          message: 'Error: No se encontro el Id',
+          message: 'Error: ID de ciclo no encontrado',
           errorContent:'Error: could not find  Id'
         })
       }
@@ -26,7 +26,7 @@ export const showCycle = async (
       next({
         errorDescription: newId,
         status: 400,
-        message:'Error: Id inexistent',
+        message:'Error: ID invalido de ciclo',
         errorContent: 'Error: Insert Id existent'
       })
     }
@@ -47,7 +47,7 @@ export const showAllCycle = async (
   next: NextFunction
 ) => {
   try {
-    const result = await cycleService.getAll()
+    const result = await cycleService.getAllCycle()
     res.status(200).json(result);
   } catch (error) {
       next({
@@ -114,8 +114,8 @@ export const deleteCycle = async (
       } else {
         next({
           status: 400,
-          message: "Error: Insert valid Id",
-          errorContent: "Error: Invalid Id"
+          message: "Error: ID invalido de ciclo",
+          errorContent: "Error: ID invalid not found"
         });
       }
     } catch (error: any) {
@@ -124,7 +124,7 @@ export const deleteCycle = async (
         if (error.code == 'P2025') {
           next({
             status: 400,
-            message: 'Error: not exist Id',
+            message: 'Error: ID incoreecto de ciclo',
             errorContent: error.meta?.cause
           })
         } else if (error.code == 'P2009') {

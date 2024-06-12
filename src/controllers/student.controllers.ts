@@ -13,12 +13,27 @@ export const showStudent = async (
     const convertId = parseInt(id);
     if (typeof convertId === "number" && convertId >= 0) {
       const result = await studentServices.getStudent(convertId);
-      res.status(200).json(result);
+      if (result) {
+        res.status(200).json(result);
+      } else {
+        next({
+          status: 400,
+          message: "ID no registrado del estudiante",
+          errorContent: "Student not found",
+        });
+      }
+    } else {
+      next({
+        status: 400,
+        message: "Ingresar ID correcto",
+        errorContent: "ID student not found",
+      });
     }
   } catch (error) {
     console.log(error);
   }
 }
+
 export const showAllStudent = async (
     req: Request,
     res: Response,
@@ -97,8 +112,7 @@ export const showAllStudent = async (
           next({
             errorDescription: error,
             status: 400,
-            message:
-              "Error, usuario no encontrado en los registros para eliminar",
+            message: "Error, ID de estudiante no encontrado en los registros",
             errorContent: error.meta?.cause,
           });
         }

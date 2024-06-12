@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { Prisma } from "../utils/prisma.server";
 import { groupService } from "../services/group.services";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
@@ -12,13 +13,22 @@ export const showGroup = async (
     const newId = parseInt(id);
     if (typeof newId === "number" && newId >=0 ) {
       const result = await groupService.getGroup(newId);
-      res.status(200).json(result);
+      if(result) {
+        res.status(200).json(result);
+      } else {
+        next ({
+          errorDescription: newId,
+          status: 400,
+          message: "Error: ID no registrado del grupo",
+          errorContent: "Error: Group not found"
+        })
+      }
     } else {
       next ({
         errorDescription: newId,
         status: 400,
-        message: "Error: Invalid group",
-        errorContent: "Error: Invalid group"
+        message: "Error: ID invalido del grupo",
+        errorContent: "Error: Invalid ID the group"
       })
     }
   } catch (error: PrismaClientKnownRequestError | any) {
@@ -57,9 +67,6 @@ export const createGroup = async (
 ) => {
   try {
     const { groupName, link, cycleName } = req.body;
-    console.log("req.body", req.body);
-    // Llama al servicio para crear el grupo con los datos proporcionados
-    console.log("cycleName en group.controllers", cycleName)
     // Si cycleName no está definido, devuelve un error
     if (cycleName === undefined || cycleName === "") {
       return next({
@@ -70,7 +77,7 @@ export const createGroup = async (
     }
     const result = await groupService.create({ groupName, link, cycleName });
     if (result) {
-      res.status(201).json(result); // Si se crea correctamente, devuelve el nuevo grupo como respuesta
+      res.status(201).json(result);
     } else {
       next({
         status: 400,
@@ -104,11 +111,27 @@ export const deleteGroup = async (
     } else {
       next({
         status: 400,
-        message: "Error: Insert valid Id",
-        errorContent: "Error: Invalid Id"
+        message: "Error: ID invalido del grupo",
+        errorContent: "Error: ID not found",
       })
     }
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code == "P2025") {
+        next({
+          errorDescription: error,
+          status: 400,
+          message: "Error, ID de grupo no encontrado en los registros",
+          errorContent: error.meta?.cause,
+        });
+      }
+    } else {
+      next({
+        errorDescription: error,
+        status: 400,
+        message: "Error, prisma client error, check logs",
+        errorContent: error.clientVersion,
+      });
+    }
   }
 };

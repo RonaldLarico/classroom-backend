@@ -6,6 +6,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
 
+export interface StudentWithGroups extends Student {
+  groups?: string[];
+}
+
 dotenv.config();
 const secret = process.env.ACCESS_TOKEN_SECRET;
 
@@ -86,7 +90,7 @@ export class authServices {
               data: {
                 student: {
                   connect: {
-                    id: existingUser?.id || newUsers[0].id // Usamos el ID del usuario existente o del nuevo usuario
+                    id: existingUser?.id || newUsers[newUsers.length - 1].id // Usamos el ID del usuario existente o del nuevo usuario
                   }
                 },
                 group: {
@@ -114,12 +118,6 @@ export class authServices {
       const { user, password } = data;
       const students = await prisma.student.findMany({
         where: { user }, // Busca todos los estudiantes con el nombre de usuario proporcionado
-        select: {
-          id: true,
-          user: true,
-          password: true,
-          token: true,
-        },
       });
       // Verifica la contraseña para cada estudiante encontrado
       for (const student of students) {

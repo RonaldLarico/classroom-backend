@@ -1,9 +1,7 @@
 import { Router } from "express";
 import { removeStudent, showAllStudent, showStudent, updateStudent } from "../controllers/student.controllers";
 import { authenticate } from "../middlewares/auth.middlewares";
-import { adminRole, userRole } from "../middlewares/role.middlewares";
-import excelUpload from '../middlewares/excel.middlewares';
-
+import { adminRole } from "../middlewares/role.middlewares";
 
 export const studentRoute = Router();
 

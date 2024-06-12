@@ -3,13 +3,31 @@ import { prisma } from "../utils/prisma.server";
 
 export class cycleService {
 
-  static async getCycle(groupName: string): Promise<Cycle | null> {
+  static async getCycle(groupName: string, id: Cycle["id"]): Promise<Cycle | null> {
     try {
       const cycle = await prisma.cycle.findFirst({
-        where: { name: groupName }, // Busca un ciclo con el nombre dado
+        where: { name: groupName, id }, // Busca un ciclo con el nombre dado
         select: {
           id: true,
           name: true,
+          group: {
+            select: {
+              groupName: true,
+              link: true,
+              students: {
+                select: {
+                  student: {
+                    select: {
+                      name: true,
+                      user: true,
+                      role: true,
+                      active: true,
+                    }
+                  }
+                }
+              }
+            }
+          }
         },
       });
       return cycle;
@@ -19,12 +37,30 @@ export class cycleService {
     }
   }
 
-  static async getAll () {
+  static async getAllCycle () {
     try {
       const result = await prisma.cycle.findMany({
         select: {
           id: true,
           name: true,
+          group: {
+            select: {
+              groupName: true,
+              link: true,
+              students: {
+                select: {
+                  student: {
+                    select: {
+                      name: true,
+                      user: true,
+                      role: true,
+                      active: true,
+                    }
+                  }
+                }
+              }
+            }
+          }
         },
       });
       return result;

@@ -2,11 +2,10 @@ import { Request as ExpressRequest, Response, NextFunction } from 'express';
 import path from 'path';
 import multer from 'multer';
 import xlsxPopulate from 'xlsx-populate';
-import { PrismaClient } from '@prisma/client';
 import { GroupData, Role, UserData } from '../utils/format.server';
 import { groupService } from '../services/group.services';
-import { cycleService } from '../services/cycle.services';
 import authServices from '../services/auth.services';
+import { encryptLink, generateIV, generateSecretKey } from '../utils/encryption';
 
 interface RequestWithStudentsData extends ExpressRequest {
   userData?: UserData[];
@@ -28,7 +27,12 @@ const excelUpload = async (
   req: RequestWithStudentsData,
   res: Response,
   next: NextFunction
-) => {
+  ) => {
+
+  // Generar clave secreta y vector de inicialización aleatorios
+  const secretKey = generateSecretKey();
+  const iv = generateIV();
+
   console.log("Entrando a ......excel")
   upload(req, res, async (err) => {
     if (err) {
@@ -78,6 +82,8 @@ const excelUpload = async (
         if (!groupName || !name || !user || !password || !role || !link || !cycleName) {
           throw new Error('Faltan campos obligatorios');
         }
+        // Cifrar el enlace
+        const encryptedLink = encryptLink(link, secretKey, iv);
 
         const userItem = {
           name,
@@ -88,7 +94,7 @@ const excelUpload = async (
         };
         const groupItem = {
           groupName,
-          link,
+          link: encryptedLink,
           cycleName,
         };
 
@@ -102,12 +108,6 @@ const excelUpload = async (
 
       req.userData = userData;
       req.groupData = groupData;
-      
-        
-      /* console.log('Tipo de req.userData:', typeof req.userData);
-      console.log(groupData);
-      console.log(userData);
-      console.log('Tipo de userData:', typeof userData); */
 
       // Verificar si usersData está definido y si tiene al menos un elemento
       if (!userData || userData.length === 0) {
@@ -116,11 +116,6 @@ const excelUpload = async (
       }
 
       await authServices.registerMultiple(userData);
-
-
-      /* console.log('groupData:', groupData);
-console.log('groupData length:', groupData.length); */
-
 
 } catch (error: any) {
   console.error('Error al procesar el archivo Excel:', error);

@@ -1,9 +1,6 @@
-import { Student } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import { Prisma } from "@prisma/client";
+import { Student } from '@prisma/client';
 import { prisma } from "../utils/prisma.server";
 import { UserUpdate } from "../utils/format.server";
-import jwt from "jsonwebtoken";
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -17,15 +14,20 @@ export class studentServices {
       select:{
         id: true,
         user: true,
-        password: true,
         name: true,
         role: true,
+        active: true,
         groups: {
           include: {
             group: {
               select: {
                 groupName: true,
                 link: true,
+                cycle: {
+                  select: {
+                    name: true
+                  }
+                }
               }
             }
           }
@@ -37,6 +39,7 @@ export class studentServices {
     throw error;
   }
 }
+
   // Mostrar todos los 'USER' & 'ADMIN'
   static async getAll(
     take: number,
@@ -48,19 +51,24 @@ export class studentServices {
         select: {
           id: true,
           user: true,
-          password: true,
           name: true,
           role: true,
+          active: true,
           groups: {
             include: {
               group: {
                 select: {
                   groupName: true,
                   link: true,
+                  cycle: {
+                    select: {
+                      name: true,
+                    }
+                  }
                 }
               }
+            }
           }
-        }
         },
         take,
         skip,

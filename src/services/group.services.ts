@@ -1,12 +1,9 @@
-import { Cycle, Group, Student } from '@prisma/client';
+import { Group } from '@prisma/client';
 import { prisma } from "../utils/prisma.server";
-import { cycleService } from './cycle.services';
-
-
 interface GroupCreationData {
   groupName: string;
-  link?: string;
-  cycleName?: string;
+  link: string;
+  cycleName: string;
 }
 
 export class groupService {
@@ -16,7 +13,6 @@ export class groupService {
       const result = await prisma.group.findUnique({
         where: { id },
         select: {
-          id: true,
           groupName: true,
           link: true,
           cycle: {
@@ -31,6 +27,7 @@ export class groupService {
                   name: true,
                   user: true,
                   role: true,
+                  active: true,
                 }
               }
             }
@@ -47,7 +44,6 @@ export class groupService {
     try {
       const result = await prisma.group.findMany({
         select: {
-          id: true,
           groupName: true,
           link: true,
           cycle: {
@@ -62,6 +58,7 @@ export class groupService {
                   name: true,
                   user: true,
                   role: true,
+                  active: true,
                 }
               }
             }
@@ -82,13 +79,13 @@ static async create(data: GroupCreationData): Promise<Group | null> {
       throw new Error(`El nombre del ciclo no está definido`);
       }
     console.log("groupName", groupName)
-        // Verificar si cycleName tiene un valor antes de continuar
-        /* if (cycleName === undefined) {
-        throw new Error(`El nombre del ciclo no está definidoooo`);
-        } */
       const cycles = await prisma.cycle.findMany({
           where: { name: { in: [cycleName]} }
       });
+       // Verificar si link tiene un valor
+    if (!link) {
+      throw new Error(`El enlace no está definido`);
+    }
 
       if (!cycles || cycles.length === 0) {
           throw new Error(`No se encontró el ciclo con el nombre ${cycleName}`);
@@ -99,9 +96,9 @@ static async create(data: GroupCreationData): Promise<Group | null> {
           },
       });
       if (existingGroup) {
-          //console.log(`El grupo ${groupName} ya existe.`);
           return existingGroup;
       }
+
       const newGroup = await prisma.group.create({
           data: {
             groupName,
@@ -111,7 +108,6 @@ static async create(data: GroupCreationData): Promise<Group | null> {
             }
           },
       });
-      console.log(`Grupo ${groupName} creado correctamente.`);
       return newGroup;
   } catch (error) {
       console.error('Error al crear el grupo:', error);

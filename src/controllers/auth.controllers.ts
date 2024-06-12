@@ -1,7 +1,7 @@
-import { Prisma } from "@prisma/client";
 import { authServices } from "../services/auth.services";
 import { NextFunction, Request, Response } from "express";
 import { UserData, userPick } from "../utils/format.server";
+import studentServices from "../services/student.services";
 
 export const registerStudent = async (
   req: Request,
@@ -13,23 +13,12 @@ export const registerStudent = async (
     console.log("userData", usersData);
     console.log("req.body:", req.body);
      // Asegurémonos de que usersData sea un array de objetos UserData válidos
-     usersData = usersData.filter(userData =>
+    usersData = usersData.filter(userData =>
       userData && typeof userData === 'object' &&
       (userData.name || userData.password || userData.role || userData.user)
     );
 
     console.log("userData después de la limpieza:", usersData);
-    /* const incompleteData = usersData.find(userData => !userData.name || !userData.password || !userData.role || !userData.user);
-    console.log("incompleteData", incompleteData)
-    if (incompleteData) {
-      console.error('Datos incompletos:', incompleteData);
-      return next({
-        errorDescription: 'Datos incompletos',
-        status: 400,
-        message: 'Datos incompletos: ' + JSON.stringify(incompleteData),
-        errorContent: 'Datos incompletos: ' + JSON.stringify(incompleteData),
-      });
-    } */
     const result = await authServices.registerMultiple(usersData);
     if (!result) {
       next({
@@ -57,7 +46,20 @@ export const loginUser = async (
       if (typeof result === 'number') {
         const tokenData: userPick = { id: result, user: "", password: "", role: "USER" };
         const token = authServices.getToken(tokenData);
-        res.json({ id: result, token });
+       // Obtén la información del estudiante correspondiente al ID devuelto
+        const student = await studentServices.getStudent(result);
+        if (student) {
+          // Si se encontró al estudiante, responde con el token y los datos del estudiante
+          res.json({ id: result, token, student });
+        } else {
+          // Si no se encontró al estudiante, maneja el error apropiadamente
+          next({
+            errorDescription: "Couldn't find user in records",
+            status: 400,
+            message: "No se pudo encontrar al usuario",
+            errorContent: "Couldn't find user in records",
+          });
+        }
       } else {
         next({
           errorDescription: "Couldn't find user in records",
@@ -70,7 +72,7 @@ export const loginUser = async (
       next({
         errorDescription: "Password don't match with user",
         status: 400,
-        message: "La contraseña no coincide con el usuario",
+        message: "El usuario o contraseña no coinciden",
         errorContent: "Password don't match with user",
       });
     }
