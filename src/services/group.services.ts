@@ -13,6 +13,7 @@ export class groupService {
       const result = await prisma.group.findUnique({
         where: { id },
         select: {
+          id: true,
           groupName: true,
           link: true,
           cycle: {
@@ -44,6 +45,7 @@ export class groupService {
     try {
       const result = await prisma.group.findMany({
         select: {
+          id: true,
           groupName: true,
           link: true,
           cycle: {
@@ -82,11 +84,9 @@ static async create(data: GroupCreationData): Promise<Group | null> {
       const cycles = await prisma.cycle.findMany({
           where: { name: { in: [cycleName]} }
       });
-       // Verificar si link tiene un valor
     if (!link) {
       throw new Error(`El enlace no está definido`);
     }
-
       if (!cycles || cycles.length === 0) {
           throw new Error(`No se encontró el ciclo con el nombre ${cycleName}`);
       }
@@ -98,7 +98,6 @@ static async create(data: GroupCreationData): Promise<Group | null> {
       if (existingGroup) {
           return existingGroup;
       }
-
       const newGroup = await prisma.group.create({
           data: {
             groupName,
@@ -115,14 +114,36 @@ static async create(data: GroupCreationData): Promise<Group | null> {
   }
 }
 
-  static async delete(id: Group["id"]) {
-    try {
-      const result = await prisma.group.delete({
-        where: { id }
-      });
-      return result;
-    } catch (error) {
-      throw error;
-    }
-  };
+static async deleteGroupAndStudents(id: number) {
+  try {
+    const studentIdsToDelete = await prisma.studentOnGroups
+      .findMany({
+        where: {
+          groupId: id
+        }
+      })
+      .then((relations) => relations.map((relation) => relation.studentId));
+    await prisma.studentOnGroups.deleteMany({
+      where: {
+        groupId: id
+      }
+    });
+    const deleteStudentsPromise = studentIdsToDelete.map((studentId) =>
+      prisma.student.delete({
+        where: {
+          id: studentId
+        }
+      })
+    );
+    await Promise.all(deleteStudentsPromise);
+    const result = await prisma.group.delete({
+      where: {
+        id
+      }
+    });
+    return result;
+  } catch (error) {
+    throw error;
+  }
+}
 };

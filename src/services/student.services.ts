@@ -113,5 +113,14 @@ export class studentServices {
       throw error;
     }
   }
+
+  static async deleteMany(){
+    try {
+      const result = await prisma.student.deleteMany();
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 export default studentServices;

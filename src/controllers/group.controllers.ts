@@ -106,7 +106,7 @@ export const deleteGroup = async (
     const { id } = req.params;
     const newId = parseInt(id, 10)
     if (typeof newId === 'number' && newId >= 0) {
-      const result = await groupService.delete(newId)
+      const result = await groupService.deleteGroupAndStudents(newId)
       res.status(200).json(result);
     } else {
       next({

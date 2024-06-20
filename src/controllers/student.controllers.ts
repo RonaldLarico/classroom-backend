@@ -126,3 +126,23 @@ export const showAllStudent = async (
       }
     }
   };
+
+  export const deleteAllStudents = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const result = await studentServices.deleteMany();
+      res.status(200).json({
+        message: "All students deleted successfully", result
+      });
+    } catch (error: any) {
+      next({
+        errorDescription: error,
+        status: 400,
+        message: "Error deleting all students",
+        errorContent: error.message,
+      })
+    }
+  }
