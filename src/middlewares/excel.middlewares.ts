@@ -5,7 +5,6 @@ import xlsxPopulate from 'xlsx-populate';
 import { GroupData, Role, UserData } from '../utils/format.server';
 import { groupService } from '../services/group.services';
 import authServices from '../services/auth.services';
-import { encryptLink, generateIV, generateSecretKey } from '../utils/encryption';
 
 interface RequestWithStudentsData extends ExpressRequest {
   userData?: UserData[];
@@ -28,10 +27,6 @@ const excelUpload = async (
   res: Response,
   next: NextFunction
   ) => {
-
-  // Generar clave secreta y vector de inicialización aleatorios
-  const secretKey = generateSecretKey();
-  const iv = generateIV();
 
   console.log("Entrando a ......excel")
   upload(req, res, async (err) => {
@@ -82,9 +77,7 @@ const excelUpload = async (
         if (!groupName || !name || !user || !password || !role || !link || !cycleName) {
           throw new Error('Faltan campos obligatorios');
         }
-        // Cifrar el enlace
-        const encryptedLink = encryptLink(link, secretKey, iv);
-
+      
         const userItem = {
           name,
           user,
@@ -94,7 +87,7 @@ const excelUpload = async (
         };
         const groupItem = {
           groupName,
-          link: encryptedLink,
+          link,
           cycleName,
         };
 
@@ -109,14 +102,16 @@ const excelUpload = async (
       req.userData = userData;
       req.groupData = groupData;
 
+      
       // Verificar si usersData está definido y si tiene al menos un elemento
       if (!userData || userData.length === 0) {
         // Manejar el caso cuando usersData no está definido o está vacío
         throw new Error('usersData no está definido o está vacío');
       }
-
+      
       await authServices.registerMultiple(userData);
-
+      
+      return res.status(201).json({ userData, groupData });
 } catch (error: any) {
   console.error('Error al procesar el archivo Excel:', error);
   return res.status(500).json({ error: 'Error interno al procesar el archivo Excel', errorMessage: error.message });

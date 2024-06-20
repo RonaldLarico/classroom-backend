@@ -135,7 +135,7 @@ export class authServices {
   static getToken(data: userPick) {
     try {
       if (secret) {
-        const token = jwt.sign(data, secret, { algorithm: "HS256" });
+        const token = jwt.sign(data, secret, { algorithm: "HS256", expiresIn: "2h" });
         console.log('Token generado:', token);
         return token;
       }

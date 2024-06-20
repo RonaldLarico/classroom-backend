@@ -9,4 +9,4 @@ export const groupRoute = Router();
 groupRoute.get("/group/:id", showGroup)
 groupRoute.get("/groups", showAllGroup)
 groupRoute.post("/group", excelUpload, createGroup)
-groupRoute.delete("/group/:id",authenticate, adminRole, deleteGroup)
+groupRoute.delete("/group/:id", deleteGroup)
