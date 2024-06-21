@@ -32,6 +32,7 @@ model Cycle {
 model Group {
   id              Int         @id @default(autoincrement())
   groupName       String
+  fecha           String
   link            String?
   cycle           Cycle       @relation(fields: [cycleId], references: [id])
   cycleId         Int

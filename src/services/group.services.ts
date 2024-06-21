@@ -2,6 +2,7 @@ import { Group } from '@prisma/client';
 import { prisma } from "../utils/prisma.server";
 interface GroupCreationData {
   groupName: string;
+  fecha: string;
   link: string;
   cycleName: string;
 }
@@ -14,6 +15,7 @@ export class groupService {
         where: { id },
         select: {
           id: true,
+          fecha: true,
           groupName: true,
           link: true,
           cycle: {
@@ -47,6 +49,7 @@ export class groupService {
         select: {
           id: true,
           groupName: true,
+          fecha: true,
           link: true,
           cycle: {
             select: {
@@ -75,7 +78,7 @@ export class groupService {
 
 static async create(data: GroupCreationData): Promise<Group | null> {
   try {
-    const { groupName, link, cycleName } = data;
+    const { groupName, fecha, link, cycleName } = data;
     console.log("cycleName en create group.services", cycleName)
     if (!cycleName) {
       throw new Error(`El nombre del ciclo no está definido`);
@@ -101,6 +104,7 @@ static async create(data: GroupCreationData): Promise<Group | null> {
       const newGroup = await prisma.group.create({
           data: {
             groupName,
+            fecha,
             link,
             cycle: {
               connect: { id: cycles[0].id }

@@ -71,10 +71,11 @@ const excelUpload = async (
         const user = sheet.cell(`D${i}`).value();
         const password = String(sheet.cell(`E${i}`).value());
         const role = sheet.cell(`F${i}`).value();
-        const link = sheet.cell(`G${i}`).value();
-        const cycleName = sheet.cell(`H${i}`).value();
+        const fecha = sheet.cell(`G${i}`).value();
+        const link = sheet.cell(`H${i}`).value();
+        const cycleName = sheet.cell(`I${i}`).value();
 
-        if (!groupName || !name || !user || !password || !role || !link || !cycleName) {
+        if (!groupName || !name || !user || !password || !role || !fecha || !link || !cycleName) {
           throw new Error('Faltan campos obligatorios');
         }
       
@@ -87,6 +88,7 @@ const excelUpload = async (
         };
         const groupItem = {
           groupName,
+          fecha,
           link,
           cycleName,
         };

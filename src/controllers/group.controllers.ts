@@ -66,7 +66,7 @@ export const createGroup = async (
   next: NextFunction
 ) => {
   try {
-    const { groupName, link, cycleName } = req.body;
+    const { groupName, fecha, link, cycleName } = req.body;
     // Si cycleName no está definido, devuelve un error
     if (cycleName === undefined || cycleName === "") {
       return next({
@@ -75,7 +75,7 @@ export const createGroup = async (
         errorContent: 'El nombre del ciclo es requeridottttttttt',
       });
     }
-    const result = await groupService.create({ groupName, link, cycleName });
+    const result = await groupService.create({ groupName, fecha, link, cycleName });
     if (result) {
       res.status(201).json(result);
     } else {
