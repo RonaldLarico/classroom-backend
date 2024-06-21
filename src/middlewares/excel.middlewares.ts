@@ -71,14 +71,14 @@ const excelUpload = async (
         const user = sheet.cell(`D${i}`).value();
         const password = String(sheet.cell(`E${i}`).value());
         const role = sheet.cell(`F${i}`).value();
-        const fecha = sheet.cell(`G${i}`).value();
+        const date = sheet.cell(`G${i}`).value();
         const link = sheet.cell(`H${i}`).value();
         const cycleName = sheet.cell(`I${i}`).value();
 
-        if (!groupName || !name || !user || !password || !role || !fecha || !link || !cycleName) {
+        if (!groupName || !name || !user || !password || !role || !date || !link || !cycleName) {
           throw new Error('Faltan campos obligatorios');
         }
-      
+
         const userItem = {
           name,
           user,
@@ -88,7 +88,7 @@ const excelUpload = async (
         };
         const groupItem = {
           groupName,
-          fecha,
+          date,
           link,
           cycleName,
         };
@@ -96,7 +96,7 @@ const excelUpload = async (
         userData.push(userItem);
         groupData.push(groupItem);
       }
-      
+
       for (const item of groupData) {
         await groupService.create(item);
         }
@@ -104,15 +104,14 @@ const excelUpload = async (
       req.userData = userData;
       req.groupData = groupData;
 
-      
       // Verificar si usersData está definido y si tiene al menos un elemento
       if (!userData || userData.length === 0) {
         // Manejar el caso cuando usersData no está definido o está vacío
         throw new Error('usersData no está definido o está vacío');
       }
-      
+
       await authServices.registerMultiple(userData);
-      
+
       return res.status(201).json({ userData, groupData });
 } catch (error: any) {
   console.error('Error al procesar el archivo Excel:', error);

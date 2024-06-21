@@ -74,7 +74,7 @@ export type UserData = {
 
 export type GroupData = {
   groupName: string;
-  fecha: string;
+  date: string;
   link: string
   cycleName: string;
 }
