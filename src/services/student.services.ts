@@ -21,7 +21,9 @@ export class studentServices {
           include: {
             group: {
               select: {
+                id: true,
                 groupName: true,
+                date: true,
                 link: true,
                 cycle: {
                   select: {
@@ -58,7 +60,9 @@ export class studentServices {
             include: {
               group: {
                 select: {
+                  id: true,
                   groupName: true,
+                  date: true,
                   link: true,
                   cycle: {
                     select: {

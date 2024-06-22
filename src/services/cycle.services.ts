@@ -12,12 +12,14 @@ export class cycleService {
           name: true,
           group: {
             select: {
+              id: true,
               groupName: true,
               link: true,
               students: {
                 select: {
                   student: {
                     select: {
+                      id: true,
                       name: true,
                       user: true,
                       role: true,
@@ -45,6 +47,7 @@ export class cycleService {
           name: true,
           group: {
             select: {
+              id: true,
               groupName: true,
               link: true,
               students: {

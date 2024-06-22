@@ -27,6 +27,7 @@ export class groupService {
             include: {
               student: {
                 select: {
+                  id: true,
                   name: true,
                   user: true,
                   role: true,
@@ -60,6 +61,7 @@ export class groupService {
             include: {
               student: {
                 select: {
+                  id:true,
                   name: true,
                   user: true,
                   role: true,
