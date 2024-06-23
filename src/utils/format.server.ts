@@ -8,35 +8,6 @@ export type loginPick = Pick<
   Student,
   "user" | "password">;
 
-/* export type updateUserPick = Pick<
-  User,
-  | "email"
-  | "firstName"
-  | "lastName"
-  | "phone"
-  | "role"
->;
-
-export type updatePostPick = Pick<
-  Post,
-  | "title"
-  | "description"
-  | "image"
-  | "authorId"
-  | "createdAt"
->; */
-
-/* export type updateStudentPick = Pick<
-  Student,
-  | "documentNumber"
-  | "name"
-  | "activityAcademy"
-  | "participation"
-  | "institute"
-  | "hour"
-  | "imageCertificate"
->; */
-
 export type paginationInfo = {
   limit: number;
   offset: number;
@@ -56,13 +27,6 @@ export type errorProp = {
   status: number;
   message: string;
 };
-
-/* export type Payload = {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-}; */
 
 export type UserData = {
   name: string;
@@ -97,4 +61,11 @@ export interface UserUpdate {
   user?: string;
   name?: string;
   role?: Role;
+}
+
+export interface UserRegister {
+  user: string;
+  password: string;
+  name: string;
+  role: Role;
 }

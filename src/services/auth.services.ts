@@ -1,6 +1,6 @@
 import { Student } from "@prisma/client";
 import { Prisma } from "@prisma/client";
-import { loginPick, UserData, userPick, UserRole } from "../utils/format.server";
+import { loginPick, UserData, userPick, UserRegister, UserRole } from "../utils/format.server";
 import { prisma } from "../utils/prisma.server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -30,7 +30,6 @@ export class authServices {
           throw new Error('La contraseña no puede estar vacía.');
         }
         const passwordHash = await bcrypt.hash(password, 10);
-  
         // Buscar todos los grupos correspondientes por el nombre del grupo
         const groups = await prisma.group.findMany({
           where: {
@@ -40,18 +39,15 @@ export class authServices {
             cycle: true,
           }
         });
-  
         if (!groups || groups.length === 0) {
           throw new Error(`No se encontró un grupo con el nombre ${groupName}`);
         }
-  
         // Verificar si el usuario ya existe en la base de datos
         const existingUser = await prisma.student.findFirst({
           where: {
             user: String(user)
           }
         });
-  
         if (existingUser) {
           // El usuario ya existe, verificar si las contraseñas coinciden
           const passwordMatch = await bcrypt.compare(password, existingUser.password);
@@ -74,7 +70,6 @@ export class authServices {
           });
           newUsers.push(newUser);
         }
-  
         // Para cada grupo encontrado, verificar y crear asociación si no existe
         for (const group of groups) {
           const existingAssociation = await prisma.studentOnGroups.findFirst({
@@ -83,7 +78,6 @@ export class authServices {
               groupId: group.id
             }
           });
-  
           if (!existingAssociation) {
             // Asociar el usuario al grupo si no está asociado previamente
             await prisma.studentOnGroups.create({
@@ -103,10 +97,38 @@ export class authServices {
           }
         }
       }
-  
       return newUsers;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      }
+      throw error;
+    }
+  }
+
+  static async create(data: UserRegister) {
+    const { user, password, name, role } = data;
+    if (!user || !password || !name || !role) {
+      throw new Error('Datos imcompletos');
+    };
+    if (!password) {
+      throw new Error('La contraseña no debe estar vacia')
+    }
+    try {
+      const passwordHash = await bcrypt.hash(password, 10);
+      const newUser = await prisma.student.create({
+        data: {
+          user,
+          password: passwordHash,
+          name,
+          role,
+        }
+      });
+      return newUser;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new Error('Error: Email ya existente')
+        }
       }
       throw error;
     }

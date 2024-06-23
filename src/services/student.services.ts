@@ -17,6 +17,7 @@ export class studentServices {
         name: true,
         role: true,
         active: true,
+        checked: true,
         groups: {
           include: {
             group: {
@@ -42,8 +43,7 @@ export class studentServices {
   }
 }
 
-  // Mostrar todos los 'USER' & 'ADMIN'
-  static async getAll(
+  static async getAllStudent(
     take: number,
     skip: number
   ) {
@@ -56,6 +56,7 @@ export class studentServices {
           name: true,
           role: true,
           active: true,
+          checked: true,
           groups: {
             include: {
               group: {
@@ -76,6 +77,26 @@ export class studentServices {
         },
         take,
         skip,
+      });
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async getAllAdmin() {
+    try {
+      const result = await prisma.student.findMany({
+        where: {
+          role: 'ADMIN',
+        },
+        orderBy: { id: "asc" },
+        select: {
+          id: true,
+          user: true,
+          name: true,
+          role: true,
+        }
       });
       return result;
     } catch (error) {

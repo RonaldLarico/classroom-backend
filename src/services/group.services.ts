@@ -32,6 +32,7 @@ export class groupService {
                   user: true,
                   role: true,
                   active: true,
+                  checked: true,
                 }
               }
             }
@@ -66,6 +67,7 @@ export class groupService {
                   user: true,
                   role: true,
                   active: true,
+                  checked: true,
                 }
               }
             }

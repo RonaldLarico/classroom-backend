@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { authServices } from "../services/auth.services";
 import { NextFunction, Request, Response } from "express";
 import { UserData, userPick } from "../utils/format.server";
@@ -17,7 +18,6 @@ export const registerStudent = async (
       userData && typeof userData === 'object' &&
       (userData.name || userData.password || userData.role || userData.user)
     );
-
     console.log("userData después de la limpieza:", usersData);
     const result = await authServices.registerMultiple(usersData);
     if (!result) {
@@ -33,6 +33,42 @@ export const registerStudent = async (
     console.log(error);
   }
 };
+
+export const registerUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const result = await authServices.create(req.body);
+    if (!result) {
+      next({
+        errorDescription: "Unique constraint failed on the fields: (`email`)",
+        status: 400,
+        message: "Error, dirección de email ya existe",
+        errorContent: "Unique constraint failed on the fields: (`email`)",
+      });
+    } else {
+      res.status(201).json(result);
+    }
+  } catch (error: any) {
+    console.log(error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code == "P2002") {
+        next({
+          errorDescription: error.meta?.target,
+          status: 400,
+          message: "Error: Email existente",
+          errorContent: "Error: Duplicate email"
+        });
+      } else {
+        res.status(400).json(error);
+      }
+    } else {
+      res.status(400).json(error);
+    }
+  }
+}
 
 export const loginUser = async (
   req: Request,

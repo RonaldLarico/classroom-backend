@@ -12,10 +12,11 @@ datasource db {
 
 model Student {
   id          Int         @id @default(autoincrement())
-  active      Boolean     @default(true)
+  active      Boolean?    @default(true)
   user        String
   password    String
   name        String
+  checked     Boolean?    @default(true)
   role        Role        @default(ADMIN)
   token       String?
   createdAt   DateTime    @default(now())

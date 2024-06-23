@@ -41,7 +41,25 @@ export const showAllStudent = async (
   ) => {
     try {
       const { limit, offset } = res.locals as paginationInfo;
-      const result = await studentServices.getAll(limit, offset);
+      const result = await studentServices.getAllStudent(limit, offset);
+      res.status(200).json(result);
+    } catch (error) {
+      next({
+        errorDescription: error,
+        status: 404,
+        message: "No se pudo encontrar los registros",
+        errorContent: "Could'n find users records",
+      });
+    }
+  };
+
+  export const showAllAdmin = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await studentServices.getAllAdmin();
       res.status(200).json(result);
     } catch (error) {
       next({

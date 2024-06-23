@@ -6,7 +6,7 @@ import excelUpload from "../middlewares/excel.middlewares";
 
 export const groupRoute = Router();
 
-groupRoute.get("/group/:id", showGroup)
-groupRoute.get("/groups", showAllGroup)
+groupRoute.get("/group/:id",authenticate, showGroup)
+groupRoute.get("/groups",authenticate, showAllGroup)
 groupRoute.post("/group", excelUpload, createGroup)
 groupRoute.delete("/group/:id", deleteGroup)
