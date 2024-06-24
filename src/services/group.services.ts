@@ -48,6 +48,7 @@ export class groupService {
   static async getAllGroup () {
     try {
       const result = await prisma.group.findMany({
+        orderBy: { id: "desc" },
         select: {
           id: true,
           groupName: true,
@@ -89,36 +90,36 @@ static async create(data: GroupCreationData): Promise<Group | null> {
       }
     console.log("groupName", groupName)
       const cycles = await prisma.cycle.findMany({
-          where: { name: { in: [cycleName]} }
+        where: { name: { in: [cycleName]} }
       });
     if (!link) {
       throw new Error(`El enlace no está definido`);
     }
       if (!cycles || cycles.length === 0) {
-          throw new Error(`No se encontró el ciclo con el nombre ${cycleName}`);
+        throw new Error(`No se encontró el ciclo con el nombre ${cycleName}`);
       }
       const existingGroup = await prisma.group.findFirst({
-          where: {
-              AND: [{ groupName }, { cycleId: { in: cycles.map(cycle => cycle.id)} }],
-          },
+        where: {
+          AND: [{ groupName }, { cycleId: { in: cycles.map(cycle => cycle.id)} }],
+        },
       });
       if (existingGroup) {
           return existingGroup;
       }
       const newGroup = await prisma.group.create({
-          data: {
-            groupName,
-            date,
-            link,
-            cycle: {
-              connect: { id: cycles[0].id }
-            }
-          },
+        data: {
+          groupName,
+          date,
+          link,
+          cycle: {
+            connect: { id: cycles[0].id }
+          }
+        },
       });
       return newGroup;
   } catch (error) {
-      console.error('Error al crear el grupo:', error);
-      throw error;
+    console.error('Error al crear el grupo:', error);
+    throw error;
   }
 }
 

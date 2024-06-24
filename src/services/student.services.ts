@@ -49,7 +49,7 @@ export class studentServices {
   ) {
     try {
       const result = await prisma.student.findMany({
-        orderBy: { id: "asc" },
+        orderBy: { id: "desc" },
         select: {
           id: true,
           user: true,
@@ -90,7 +90,7 @@ export class studentServices {
         where: {
           role: 'ADMIN',
         },
-        orderBy: { id: "asc" },
+        orderBy: { id: "desc" },
         select: {
           id: true,
           user: true,

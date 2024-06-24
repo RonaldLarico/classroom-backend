@@ -5,7 +5,7 @@ import { authenticate } from "../middlewares/auth.middlewares";
 
 export const cycleRoute = Router();
 
-cycleRoute.get("/cycle/:id", showCycle)
-cycleRoute.get("/cycles", showAllCycle)
-cycleRoute.post("/cycle", createCycle)
-cycleRoute.delete("/cycle/:id", authenticate, adminRole, deleteCycle)
+cycleRoute.get("/cycle/:id", authenticate,  showCycle)
+cycleRoute.get("/cycles", authenticate, showAllCycle)
+cycleRoute.post("/cycle", authenticate, createCycle)
+cycleRoute.delete("/cycle/:id", authenticate, deleteCycle)

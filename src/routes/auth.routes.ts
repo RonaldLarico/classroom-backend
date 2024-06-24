@@ -6,6 +6,6 @@ import excelUpload  from "../middlewares/excel.middlewares"
 
 export const authRoute = Router();
 
-authRoute.post("/student/register", excelUpload, registerStudent);
-authRoute.post("/user/create", registerUser);
+authRoute.post("/student/register", authenticate, excelUpload, registerStudent);
+authRoute.post("/user/create",authenticate, registerUser);
 authRoute.post("/student/login", loginUser);
