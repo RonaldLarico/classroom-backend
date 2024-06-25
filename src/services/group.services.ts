@@ -60,6 +60,11 @@ export class groupService {
             }
           },
           students: {
+            where: {
+              student: {
+                role: 'USER'
+              }
+            },
             include: {
               student: {
                 select: {

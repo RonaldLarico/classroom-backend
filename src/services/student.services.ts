@@ -49,6 +49,9 @@ export class studentServices {
   ) {
     try {
       const result = await prisma.student.findMany({
+        where: {
+          role: 'USER'
+        },
         orderBy: { id: "desc" },
         select: {
           id: true,
