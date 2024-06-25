@@ -13,10 +13,7 @@ export const app = express();
 //Development
 app.use(morgan("dev"));
 app.use(express.json());
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true,
-}));
+app.use(cors());
 
 const prefix: string = "/api/v1";
 //Routes

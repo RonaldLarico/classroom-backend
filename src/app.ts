@@ -4,12 +4,16 @@ import { Request, Response, NextFunction } from "express";
 import cors from "cors";
 // export const app = express();
 
-app.use(cors({
+const writerList = ["https://cokitomas.com", "https://www.cokitomas.com"]
+
+app.use(cors({ origin: writerList }));
+
+/* app.use(cors({
   origin: ["localhost:8000"],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Métodos permitidos
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
-
+ */
 app.get("/", (req: Request, res: Response, next: NextFunction) => {
   prisma;
   res.status(200).json({
